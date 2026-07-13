@@ -12,4 +12,5 @@ USER www-data
 # Run Composer installation during build phase
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
+# পোর্ট ১০০০০ এর বদলে Render-এর দেওয়া $PORT ভ্যারিয়েবলটি ব্যবহার করুন
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
