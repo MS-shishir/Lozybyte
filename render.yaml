@@ -6,11 +6,12 @@ services:
   # 1. Laravel Backend (Web Service)
   # ---------------------------------------------------------------------------
   - type: web
-    name: lozybyte
+    name: lozybyte-backend
     env: docker
     plan: free # Change to 'starter' or higher for production use
     region: oregon # Render's default region (use same region for database and services)
     branch: main # Change to your deployment branch if different (e.g., master)
+    port: 8080 # serversideup/php runs on port 8080 by default (non-root user security)
     preDeployCommand: php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
     envVars:
       - key: APP_ENV
@@ -64,6 +65,29 @@ services:
         value: https://lozybyte-frontend.onrender.com
         sync: false
 
+  # ---------------------------------------------------------------------------
+  # 2. Next.js Frontend (Web Service)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: lozybyte-frontend
+    env: node
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://lozybyte-backend.onrender.com/api
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://lozybyte-frontend.onrender.com
+        sync: false
+      - key: NEXT_PUBLIC_FRONTEND_URL
+        value: https://lozybyte-frontend.onrender.com
+        sync: false
+
 #  # ---------------------------------------------------------------------------
 #  # Optional: Laravel Queue Worker (Background Worker)
 #  # ---------------------------------------------------------------------------
@@ -76,33 +100,33 @@ services:
 #    startCommand: php artisan queue:work
 #    envVars:
 #      - key: APP_ENV
-#         value: production
+#        value: production
 #      - key: APP_DEBUG
-#         value: "false"
+#        value: "false"
 #      - key: APP_KEY
-#         sync: false
+#        sync: false
 #      - key: DB_CONNECTION
-#         value: pgsql
+#        value: pgsql
 #      - key: DB_HOST
-#         fromDatabase:
+#        fromDatabase:
 #           name: lozybyte-db
 #           property: host
 #      - key: DB_PORT
-#         value: "5432"
+#        value: "5432"
 #      - key: DB_DATABASE
-#         fromDatabase:
+#        fromDatabase:
 #           name: lozybyte-db
 #           property: database
 #      - key: DB_USERNAME
-#         fromDatabase:
+#        fromDatabase:
 #           name: lozybyte-db
 #           property: user
 #      - key: DB_PASSWORD
-#         fromDatabase:
+#        fromDatabase:
 #           name: lozybyte-db
 #           property: password
 #      - key: QUEUE_CONNECTION
-#         value: database
+#        value: database
 
 databases:
   # ---------------------------------------------------------------------------

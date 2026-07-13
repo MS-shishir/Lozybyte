@@ -1,30 +1,14 @@
-FROM richarvey/nginx-php-fpm:3.1.6
+FROM serversideup/php:8.3-fpm-nginx
 
-# Copy application source files
-COPY . /var/www/html
+# Switch to root user to copy files and adjust permissions
+USER root
 
-# Nginx-PHP-FPM base image configuration
-ENV SKIP_COMPOSER 1
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
+# Copy application source files and set owner to www-data
+COPY --chown=www-data:www-data . /var/www/html
 
-# Laravel environment defaults (can be overridden by Render dashboard env variables)
-ENV APP_ENV production
-ENV APP_DEBUG false
-ENV LOG_CHANNEL stderr
+# Switch back to unprivileged www-data user for execution
+USER www-data
 
-# Allow Composer to execute commands as root
-ENV COMPOSER_ALLOW_SUPERUSER 1
-
-# Run Composer installation during build phase (cached in docker image layer)
+# Run Composer installation during build phase
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
-# Setup proper directory permissions for Laravel storage & bootstrap cache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
-
-# Start the web server and PHP-FPM
-CMD ["/start.sh"]
