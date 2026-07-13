@@ -1,0 +1,115 @@
+# Render Blueprint Configuration
+# For deploying Laravel (Backend) + Next.js (Frontend) + PostgreSQL Database
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Laravel Backend (Web Service)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: lozybyte
+    env: docker
+    plan: free # Change to 'starter' or higher for production use
+    region: oregon # Render's default region (use same region for database and services)
+    branch: main # Change to your deployment branch if different (e.g., master)
+    preDeployCommand: php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+        placeholder: "Run 'php artisan key:generate --show' and paste base64:... key here"
+      - key: APP_URL
+        value: https://lozybyte-backend.onrender.com
+        sync: false
+      
+      # Database connection (linked to the database service defined below)
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: lozybyte-db
+          property: host
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        fromDatabase:
+          name: lozybyte-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: lozybyte-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lozybyte-db
+          property: password
+
+      # Laravel sessions, cache & queues (configured to use the PostgreSQL database)
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # CORS & Frontend URLs
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://lozybyte-frontend.onrender.com
+        sync: false
+      - key: FRONTEND_URL
+        value: https://lozybyte-frontend.onrender.com
+        sync: false
+
+#  # ---------------------------------------------------------------------------
+#  # Optional: Laravel Queue Worker (Background Worker)
+#  # ---------------------------------------------------------------------------
+#  - type: worker
+#    name: lozybyte-queue-worker
+#    env: docker
+#    plan: free
+#    region: oregon
+#    branch: main
+#    startCommand: php artisan queue:work
+#    envVars:
+#      - key: APP_ENV
+#         value: production
+#      - key: APP_DEBUG
+#         value: "false"
+#      - key: APP_KEY
+#         sync: false
+#      - key: DB_CONNECTION
+#         value: pgsql
+#      - key: DB_HOST
+#         fromDatabase:
+#           name: lozybyte-db
+#           property: host
+#      - key: DB_PORT
+#         value: "5432"
+#      - key: DB_DATABASE
+#         fromDatabase:
+#           name: lozybyte-db
+#           property: database
+#      - key: DB_USERNAME
+#         fromDatabase:
+#           name: lozybyte-db
+#           property: user
+#      - key: DB_PASSWORD
+#         fromDatabase:
+#           name: lozybyte-db
+#           property: password
+#      - key: QUEUE_CONNECTION
+#         value: database
+
+databases:
+  # ---------------------------------------------------------------------------
+  # 3. PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  - name: lozybyte-db
+    plan: free
+    region: oregon
+    databaseName: lozybyte
+    user: lozybyte_user
